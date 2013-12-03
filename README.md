@@ -1,0 +1,4 @@
+lottery
+=======
+
+Lotter ruby application
