@@ -11,30 +11,50 @@ class Lottery
   reintegro_prize = 200
 
   def self.create_lottery
-    file = File.open("number.txt", "w+")
-    file.puts "Lottery no,Serial No."
+    file = File.open("lottery.txt", "w+")
+    file.puts "Lottery no,Serial No.,Person"
     max_num = rand(9999)
     (1..max_num).each do |no|
-      (winner = '%05i' % (rand(9999)+1))
-      (serial = '%03i' % (rand(179)+1))
-      file.puts winner + "," + serial
+      lottery = '%05i' % (rand(9999)+1)
+      serial  = '%03i' % (rand(179)+1)
+      person  = "Person_#{lottery}_#{serial}"
+      file.puts lottery + "," + serial + "," + person
     end
   end
 
   def task_a
-    file = File.open("number.txt")
+    file = File.open("lottery.txt")
     count = 0
-    File.open("number.txt", "r").each_with_index do |row, index|
+    File.open("lottery.txt", "r").each_with_index do |row, index|
       if index.to_i > 0
         # a = row.split(",")
         # puts a[0] + " - " + a[1]
         count += 1
       end
     end
-    puts " Total Lottery sold are: #{count.to_s} "
+    puts "Total Lottery sold are: #{count.to_s} "
   end
 
-  def task_b
+  def simulator
+    winner = []
+    (winner << '%05i' % (rand(9999)+1)).uniq! while winner.length < 5
+    ticket1, ticket2, ticket3, ticket4, ticket5 = winner  # get the array for the winner number
+
+    winner << ticket6 = ticket1.to_i - 1 #1st consolation number
+    winner << ticket7 = ticket1.to_i + 1 #1st consolation number
+    winner << ticket8 = ticket2.to_i - 1 #2nd consolation number
+    winner << ticket9 = ticket2.to_i + 1 #2nd consolation number
+    winner << ticket10 = ticket3.to_i - 1 #3rd consolation number
+    winner << ticket11 = ticket3.to_i + 1 #3rd consolation number
+    winner << ticket12 = /[0-9]{3}/.match(ticket1).to_s #centena_prize
+    winner << ticket13 = /[0-9]{3}/.match(ticket2).to_s #centena_prize
+    winner << ticket14 = /[0-9]{3}/.match(ticket3).to_s #centena_prize
+    winner << ticket15 = /[0-9]{3}/.match(ticket4).to_s #centena_prize
+    winner << ticket16 = /[0-9]{3}/.match(ticket5).to_s #centena_prize
+    winner << ticket17 = (ticket1.to_i % 10).to_s
+    return winner
+  end
+  def task_b_c_d
     puts "The lottery is running please wait for....."
     sleep(1)
     puts "5..."
@@ -49,39 +69,60 @@ class Lottery
     sleep(1)
     puts "Here is the results:"
     winner = []
-    (winner << '%05i' % (rand(9999)+1)).uniq! while winner.length < 5
-    ticket1, ticket2, ticket3, ticket4, ticket5 = winner  # get the array for the winner number
-    ticket6 = ticket1.to_i - 1 #1st consolation number
-    ticket7 = ticket1.to_i + 1 #1st consolation number
-    ticket8 = ticket2.to_i - 1 #2nd consolation number
-    ticket9 = ticket2.to_i + 1 #2nd consolation number
-    ticket10 = ticket3.to_i - 1 #3rd consolation number
-    ticket11 = ticket3.to_i + 1 #3rd consolation number
-    ticket12 = (ticket1.to_i / 100).to_s #centena_prize
-    ticket13 = (ticket2.to_i / 100).to_s #centena_prize
-    ticket14 = (ticket3.to_i / 100).to_s #centena_prize
-    ticket15 = (ticket4.to_i / 100).to_s #centena_prize
-    ticket16 = (ticket5.to_i / 100).to_s #centena_prize
-    ticket17 = ticket1.to_i % 10
+    hash_winner = Hash.new
+    winner = simulator()
 
-    puts "1st prize number is: #{ticket1}"
-    # sleep(1)
-    puts "2nd prize number is: #{ticket2}"
-    # sleep(1)
-    puts "3rd prize number is: #{ticket3}"
-    # sleep(1)
-    puts "4th prize number is: #{ticket1}"
-    # sleep(1)
-    puts "1st consolation prize numbers are: #{ticket6} and #{ticket7} "
-    # sleep(1)
-    puts "2nd consolation prize numbers are: #{ticket8} and #{ticket9}"
-    # sleep(1)
-    puts "3rd consolation prize numbers are: #{ticket10} and #{ticket11}"
-    # sleep(1)
-    puts "centena prize numbers are: #{ticket12}, #{ticket13}, #{ticket14}, #{ticket15} and #{ticket16}"
-    # sleep(1)
-    puts "reintegro prize number is: #{ticket17}"
+    puts winner.inspect
+    winner.each_with_index do |win, ind|
+      arr_winner = []
+      File.open("lottery.txt", "r").each_with_index do |row, index|
+        if index.to_i > 0
+          a = row.split(",")
+          person = a[2].gsub("\n", "")
+          if ind.to_i <= 10
+            if win.to_s == a[0].to_s
+              arr_winner << person
+              hash_winner["#{ind.to_i + 1}"] = arr_winner
+            end
+          end
+          if ind.to_i > 10 && ind.to_i <= 15
+            win_lottery = win.to_s
+            if win_lottery == /[0-9]{3}/.match(a[0]).to_s
+              arr_winner << person
+              hash_winner["#{ind.to_i + 1}"] = arr_winner
+            end
+          end
+          if ind.to_i > 15
+            win_lottery = win.to_s
+            if win_lottery.to_s == /[0-9]{1}$/.match(a[0]).to_s
+              arr_winner << person
+              hash_winner["#{ind.to_i + 1}"] = arr_winner
+            end
+          end
+        end
+      end
+    end
+    #puts hash_winner.inspect
+    puts "1st prize number is: #{winner[0]} and the winner(s): #{hash_winner["1"]}"
+    sleep(1)
+    puts "2nd prize number is: #{winner[1]} and the winner(s): #{hash_winner["2"]}"
+    sleep(1)
+    puts "3rd prize number is: #{winner[2]} and the winner(s): #{hash_winner["3"]}"
+    sleep(1)
+    puts "4th prize numbers are: #{winner[3]} and #{winner[4]} and the winner(s): #{hash_winner["4"]} #{hash_winner["5"]}"
+    sleep(1)
+    puts "1st consolation prize numbers are: #{winner[5]} and #{winner[6]} and the winner(s): #{hash_winner["1"]}"
+    sleep(1)
+    puts "2nd consolation prize numbers are: #{winner[7]} and #{winner[8]} and the winner(s): #{hash_winner["1"]}"
+    sleep(1)
+    puts "3rd consolation prize numbers are: #{winner[9]} and #{winner[10]} and the winner(s): #{hash_winner["1"]}"
+    sleep(1)
+    puts "centena prize numbers are: #{winner[11]}, #{winner[12]}, #{winner[13]}, #{winner[14]} and #{winner[15]} and the winner(s): #{hash_winner["1"]}"
+    sleep(1)
+    puts "reintegro prize number is: #{winner[16]} and the winner(s): #{hash_winner["17"]}"
   end
 end
+#Lottery.create_lottery
 a = Lottery.new
-a.task_b
+a.task_a
+a.task_b_c_d
